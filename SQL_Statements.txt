@@ -1,0 +1,21 @@
+**********Queries*************
+
+  - reconcilePayments()
+alter table orders add column checkNumber varchar(100);
+alter table orders add column orderPaymentCompleted varchar(100);
+alter table orders add column totalAmount float4;
+update orders o join (select orderNumber,sum(orderdetails.quantityOrdered*orderdetails.priceEach) as totalSales from orderdetails group by orderNumber) j on  o.orderNumber = j.orderNumber set o.totalAmount = j.totalSales;
+update orders o join payments p on o.customerNumber = p.customerNumber set o.checkNumber = p.checkNumber where floor(o.totalAmount) = floor(p.amount) ;
+update orders o  cross join payments p set o.orderPaymentCompleted = "YES" where floor(o.totalAmount) = floor(p.amount) and o.checkNumber = p.checkNumber;
+
+
+ - unpaidOrders()
+select orderNumber from orders where orderPaymentCompleted is not null and status !='Cancelled' and status!='Disputed';
+
+ - unknownPayments()
+SELECT p.checkNumber FROM payments p left outer join orders o on o.checkNumber = p.checkNumber where o.checkNumber is null;
+
+-payOrder()
+alter table payments add column validPayment varchar(100);
+
+
